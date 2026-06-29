@@ -10,8 +10,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
-    // 1. Validar credenciales
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    // 1. Validar credenciales (DNI, código universitario o email para admin)
+    const user = await this.authService.validateUser(loginDto.identificador, loginDto.password);
     
     // 2. Generar tokens
     return this.authService.login(user);

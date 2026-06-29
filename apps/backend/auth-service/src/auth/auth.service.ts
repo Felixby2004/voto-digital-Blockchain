@@ -11,11 +11,19 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    const usuario = await prisma.usuario.findUnique({
-      where: { email },
+  async validateUser(identificador: string, password: string) {
+    // El identificador puede ser: DNI (estudiante/docente), código universitario (estudiante) o email (admin)
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { dni: identificador },
+          { email: identificador },
+          { estudiante: { codigoUniversitario: identificador } },
+        ],
+      },
       include: {
         estudiante: true,
+        profesor: true,
         administrador: true,
       },
     });
@@ -49,6 +57,14 @@ export class AuthService {
       };
     }
 
+    if (usuario.profesor) {
+      additionalInfo = {
+        profesorId: usuario.profesor.id,
+        codigo: usuario.profesor.codigoEmpleado,
+        facultad: usuario.profesor.facultad,
+      };
+    }
+
     if (usuario.administrador) {
       additionalInfo = {
         adminId: usuario.administrador.id,
@@ -59,6 +75,7 @@ export class AuthService {
     return {
       id: usuario.id,
       email: usuario.email,
+      dni: usuario.dni,
       nombre: usuario.nombre,
       rol: role,
       ...additionalInfo,
@@ -69,6 +86,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
+      dni: user.dni ?? null,
       rol: user.rol,
     };
 
@@ -90,8 +108,10 @@ export class AuthService {
         id: user.id,
         nombre: user.nombre,
         email: user.email,
+        dni: user.dni ?? null,
         rol: user.rol,
         ...(user.estudianteId && { estudianteId: user.estudianteId }),
+        ...(user.profesorId && { profesorId: user.profesorId }),
         ...(user.adminId && { adminId: user.adminId }),
       },
     };
@@ -117,6 +137,7 @@ export class AuthService {
       const newPayload = {
         sub: usuario.id,
         email: usuario.email,
+        dni: usuario.dni ?? null,
         rol: usuario.rol,
       };
 

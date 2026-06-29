@@ -43,6 +43,7 @@ export class PadronService {
           where: {
             OR: [
               { email: persona.email },
+              { dni: persona.dni },
               ...(tipo === 'ESTUDIANTE'
                 ? [
                     { estudiante: { dni: persona.dni } },
@@ -71,6 +72,7 @@ export class PadronService {
           data: {
             nombre: persona.nombre,
             email: persona.email,
+            dni: persona.dni,
             passwordHash: hashedPassword,
             rol: tipo === 'ESTUDIANTE' ? 'ESTUDIANTE' : 'PROFESOR',
             estado: 'ACTIVO',

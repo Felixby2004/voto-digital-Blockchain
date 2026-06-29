@@ -53,6 +53,7 @@ model Usuario {
   id              String         @id @default(uuid())
   nombre          String
   email           String         @unique
+  dni             String?        @unique
   passwordHash    String
   rol             RolUsuario     @default(ESTUDIANTE)
   estado          EstadoUsuario  @default(ACTIVO)
