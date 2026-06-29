@@ -1,10 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { UpdateCandidateDto } from './dto/update-candidate.dto';
 
 @Injectable()
 export class CandidateService {
+  private readonly logger = new Logger(CandidateService.name);
+
   constructor(private prisma: PrismaService) {}
 
   // Verificar que la elección existe y está en estado modificable
@@ -25,7 +27,7 @@ export class CandidateService {
   async create(data: CreateCandidateDto) {
     await this.validateEleccion(data.eleccionId);
 
-    return this.prisma.candidato.create({
+    const candidato = await this.prisma.candidato.create({
       data: {
         nombre: data.nombre,
         apellido: data.apellido,
@@ -38,6 +40,8 @@ export class CandidateService {
         estado: 'ACTIVO',
       },
     });
+    this.logger.log(`Candidato creado: ${candidato.id} para elección ${data.eleccionId}`);
+    return candidato;
   }
 
   // Listar todos los candidatos (con filtro opcional por elección)

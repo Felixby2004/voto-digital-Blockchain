@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { parse } from 'csv-parse';
@@ -18,6 +18,8 @@ interface PersonaImport {
 
 @Injectable()
 export class PadronService {
+  private readonly logger = new Logger(PadronService.name);
+
   constructor(private prisma: PrismaService) {}
 
   // ============================================================
@@ -113,6 +115,7 @@ export class PadronService {
       }
     }
 
+    this.logger.log(`Importación ${tipo}: ${resultados.exitosos} exitosos, ${resultados.fallidos} fallidos`);
     return resultados;
   }
 

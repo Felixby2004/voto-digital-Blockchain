@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter, LoggingInterceptor } from 'common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +16,10 @@ async function bootstrap() {
     }),
   );
 
-  const port = config.get<number>('PADRON_PORT', 3006); // Puerto diferente para evitar conflicto
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  const port = config.get<number>('PADRON_PORT', 3006);
   await app.listen(port);
   console.log(`📋 Padron Simple Service corriendo en http://localhost:${port}`);
 }

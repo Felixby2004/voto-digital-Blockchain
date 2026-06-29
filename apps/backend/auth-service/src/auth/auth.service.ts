@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from 'database';
@@ -6,13 +6,15 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}
 
-  async validateUser(identificador: string, password: string) {
-    // El identificador puede ser: DNI (estudiante/docente), código universitario (estudiante) o email (admin)
+  // Validar credenciales: identificador puede ser DNI, código universitario o email (admin)
+  async validateUser(identificador: string, password: string): Promise<any> {
     const usuario = await prisma.usuario.findFirst({
       where: {
         OR: [
@@ -29,23 +31,24 @@ export class AuthService {
     });
 
     if (!usuario) {
+      this.logger.warn(`Intento de login fallido (usuario no encontrado)`);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Verificar estado
     if (usuario.estado !== 'ACTIVO') {
+      this.logger.warn(`Intento de login en cuenta inactiva: rol=${usuario.rol}`);
       throw new UnauthorizedException('Cuenta inactiva o bloqueada');
     }
 
-    // Comparar contraseña
     const isPasswordValid = await bcrypt.compare(password, usuario.passwordHash);
     if (!isPasswordValid) {
+      // No se loguea el identificador para evitar correlación (REGLA 8)
+      this.logger.warn(`Credenciales inválidas para rol=${usuario.rol}`);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Determinar el rol y construir el payload
     let role = usuario.rol;
-    let additionalInfo = {};
+    let additionalInfo: Record<string, any> = {};
 
     if (usuario.estudiante) {
       additionalInfo = {
@@ -72,6 +75,8 @@ export class AuthService {
       };
     }
 
+    this.logger.log(`Login exitoso rol=${role} (sin identificar usuario)`);
+
     return {
       id: usuario.id,
       email: usuario.email,
@@ -82,7 +87,10 @@ export class AuthService {
     };
   }
 
-  async login(user: any) {
+  // Login combinado: valida credenciales y genera tokens
+  async login(identificador: string, password: string) {
+    const user = await this.validateUser(identificador, password);
+
     const payload = {
       sub: user.id,
       email: user.email,
@@ -90,7 +98,6 @@ export class AuthService {
       rol: user.rol,
     };
 
-    // Generar tokens
     const accessToken = this.jwtService.sign(payload, {
       secret: this.config.get('JWT_SECRET'),
       expiresIn: this.config.get('JWT_EXPIRATION', '15m'),
@@ -119,12 +126,10 @@ export class AuthService {
 
   async refreshTokens(refreshToken: string) {
     try {
-      // Verificar el refresh token
       const payload = this.jwtService.verify(refreshToken, {
         secret: this.config.get('JWT_REFRESH_SECRET'),
       });
 
-      // Buscar el usuario para asegurar que sigue activo
       const usuario = await prisma.usuario.findUnique({
         where: { id: payload.sub },
       });
@@ -133,7 +138,6 @@ export class AuthService {
         throw new UnauthorizedException('Usuario no válido');
       }
 
-      // Generar nuevo access token (y refresh opcional)
       const newPayload = {
         sub: usuario.id,
         email: usuario.email,
@@ -146,11 +150,9 @@ export class AuthService {
         expiresIn: this.config.get('JWT_EXPIRATION', '15m'),
       });
 
-      // Opcionalmente, rotar refresh token también (lo haremos simple por ahora)
-      return {
-        accessToken: newAccessToken,
-      };
+      return { accessToken: newAccessToken };
     } catch (error) {
+      this.logger.warn('Refresh token inválido o expirado');
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
   }

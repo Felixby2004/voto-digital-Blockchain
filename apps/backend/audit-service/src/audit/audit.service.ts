@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 import { QueryAuditLogDto } from './dto/query-audit-log.dto';
 
 @Injectable()
 export class AuditService {
+  private readonly logger = new Logger(AuditService.name);
+
   constructor(private prisma: PrismaService) {}
 
   // Registrar un evento de auditoría
   async logEvent(data: CreateAuditLogDto) {
-    return this.prisma.auditoriaEvento.create({
+    const event = await this.prisma.auditoriaEvento.create({
       data: {
         tipoEvento: data.tipoEvento,
         descripcion: data.descripcion,
@@ -18,6 +20,8 @@ export class AuditService {
         metadata: data.metadata || {},
       },
     });
+    this.logger.log(`Evento de auditoría registrado: ${data.tipoEvento}`);
+    return event;
   }
 
   // Listar eventos con filtros y paginación

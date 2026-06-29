@@ -2,6 +2,7 @@ import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { HealthController } from './health/health.controller';
+import { JwtAuthMiddleware } from './middleware/jwt-auth.middleware';
 import { AuthProxyMiddleware } from './middleware/auth-proxy.middleware';
 import { ElectoralProxyMiddleware } from './middleware/electoral-proxy.middleware';
 import { PadronProxyMiddleware } from './middleware/padron-proxy.middleware';
@@ -11,6 +12,9 @@ import { AuditProxyMiddleware } from './middleware/audit-proxy.middleware';
 import { BlockchainProxyMiddleware } from './middleware/blockchain-proxy.middleware';
 import { RelayerProxyMiddleware } from './middleware/relayer-proxy.middleware';
 import { CryptoProxyMiddleware } from './middleware/crypto-proxy.middleware';
+import { AdminProxyMiddleware } from './middleware/admin-proxy.middleware';
+import { FacultyProxyMiddleware } from './middleware/faculty-proxy.middleware';
+import { NotificationProxyMiddleware } from './middleware/notification-proxy.middleware';
 
 @Module({
   imports: [
@@ -29,6 +33,8 @@ import { CryptoProxyMiddleware } from './middleware/crypto-proxy.middleware';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
+    // JWT verification primero (defensa en profundidad)
+    consumer.apply(JwtAuthMiddleware).forRoutes('*');
     consumer
       .apply(AuthProxyMiddleware)
       .forRoutes('*');
@@ -55,6 +61,15 @@ export class AppModule {
       .forRoutes('*');
     consumer
       .apply(CryptoProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(AdminProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(FacultyProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(NotificationProxyMiddleware)
       .forRoutes('*');
   }
 }

@@ -17,7 +17,9 @@
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "common": "workspace:*",
     "csv-parse": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
     "xlsx": "^0.18.5"
@@ -26,6 +28,7 @@
     "@nestjs/cli": "^10.3.0",
     "@nestjs/schematics": "^10.0.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^2.1.0",
     "@types/node": "^20.11.0",
     "prisma": "^5.14.0",

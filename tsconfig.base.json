@@ -23,7 +23,8 @@
     "paths": {
       "@crypto-core/*": ["packages/crypto-core/src/*"],
       "@database/*": ["packages/database/src/*"],
-      "@shared-types/*": ["packages/shared-types/src/*"]
+      "@shared-types/*": ["packages/shared-types/src/*"],
+      "@common/*": ["packages/common/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
