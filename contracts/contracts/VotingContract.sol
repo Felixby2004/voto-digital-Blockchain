@@ -122,11 +122,10 @@ contract VotingContract {
         // Los inputs públicos son: [nullifier, merkleRoot, electionId]
         // Nota: La conversión de bytes32 a uint256 se hace automáticamente en el circuito.
         // Asumimos que el circuito espera los inputs en este orden exacto.
-        uint256[4] memory input = [
+        uint256[3] memory input = [
             uint256(nullifier),
             uint256(merkleRoot),
-            uint256(electionId),
-            0 // Padding o placeholder si el circuito tiene 4 inputs públicos, ajustaremos después.
+            uint256(electionId)
         ];
 
         // Ejecutar la verificación (cualquier fallo revierte la transacción)

@@ -166,7 +166,14 @@ pnpm db:migrate -- --name init
 
 # 6. Ejecutar los microservicios
 
-Abrir una terminal para cada servicio.
+## Opción A: Ejecución Automática (Recomendado en Windows)
+Puedes utilizar el script `local.bat` en la raíz del proyecto para realizar la verificación inicial, levantar los 7 microservicios de manera ordenada en ventanas individuales de consola y, finalmente, ejecutar las pruebas de contratos en la terminal principal:
+```bash
+.\local.bat
+```
+
+## Opción B: Ejecución Manual
+Abrir una terminal independiente para cada uno de los siguientes servicios:
 
 ## API Gateway
 
@@ -286,6 +293,39 @@ curl.exe -X POST http://localhost:3000/api/padron/importar/ESTUDIANTE \
 
 ---
 
+# 9. Compilación de Circuitos ZKP y Smart Contracts
+
+El proyecto incluye soporte para pruebas de elegibilidad ZK basadas en **Circom 2** y **SnarkJS** en el paquete `packages/crypto-core`.
+
+## 9.1. Compilar el circuito y generar Verificador Solidity
+Para compilar el circuito de elegibilidad (`Eligibility.circom`), generar la clave de pruebas de Groth16 (`Eligibility.zkey` usando un setup de Powers of Tau de potencia 15 para soportar los constraints del circuito) y exportar el verificador de Solidity (`Verifier.sol`), ejecuta el flujo completo desde la raíz:
+
+```bash
+# Compilar circuito, generar setup Groth16 y exportar Verifier.sol
+pnpm --filter crypto-core circuit:full
+```
+
+*Nota: Los scripts individuales disponibles en `packages/crypto-core` son:*
+* `pnpm --filter crypto-core circuit:compile` (Compila el circuito con el binario local nativo `circom.exe`)
+* `pnpm --filter crypto-core circuit:setup` (Ejecuta el Groth16 trusted setup)
+* `pnpm --filter crypto-core circuit:export-verifier` (Exporta el validador a `contracts/contracts/Verifier.sol`)
+
+## 9.2. Desplegar los Contratos (Hardhat)
+Una vez que el archivo `Verifier.sol` ha sido exportado a la carpeta de contratos, puedes compilar y desplegar los contratos inteligentes (que enlazan el Verificador ZKP real con el Contrato de Votación):
+
+```bash
+# Compilar contratos y generar tipados Typechain
+pnpm --filter contracts compile
+
+# Desplegar localmente en red Hardhat (in-memory)
+pnpm --filter contracts deploy:local
+
+# Desplegar en Syscoin Testnet (requiere configurar clave privada y RPC en el .env de la raíz)
+pnpm --filter contracts deploy:testnet
+```
+
+---
+
 # Posibles errores
 
 | Error                                       | Solución                                                                                                                                  |
@@ -339,6 +379,8 @@ universidad-voto/
 * [ ] Ejecutar `pnpm approve-builds`
 * [ ] Ejecutar `pnpm db:generate`
 * [ ] Ejecutar `pnpm db:migrate`
-* [ ] Levantar los 7 microservicios
+* [ ] Compilar circuito ZKP y exportar Verifier (`pnpm --filter crypto-core circuit:full`)
+* [ ] Desplegar smart contracts con verificador real (`pnpm --filter contracts deploy:local` o `deploy:testnet`)
+* [ ] Levantar los 7 microservicios (automático con `.\local.bat` o manual)
 * [ ] Verificar los endpoints de salud
 * [ ] (Opcional) Importar el archivo `estudiantes.csv`

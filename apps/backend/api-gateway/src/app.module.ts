@@ -8,6 +8,9 @@ import { PadronProxyMiddleware } from './middleware/padron-proxy.middleware';
 import { CandidateProxyMiddleware } from './middleware/candidate-proxy.middleware';
 import { DashboardProxyMiddleware } from './middleware/dashboard-proxy.middleware';
 import { AuditProxyMiddleware } from './middleware/audit-proxy.middleware';
+import { BlockchainProxyMiddleware } from './middleware/blockchain-proxy.middleware';
+import { RelayerProxyMiddleware } from './middleware/relayer-proxy.middleware';
+import { CryptoProxyMiddleware } from './middleware/crypto-proxy.middleware';
 
 @Module({
   imports: [
@@ -17,7 +20,7 @@ import { AuditProxyMiddleware } from './middleware/audit-proxy.middleware';
       cache: true,
     }),
     HttpModule.register({
-      timeout: 5000,
+      timeout: 15000,
       maxRedirects: 0,
     }),
   ],
@@ -43,6 +46,15 @@ export class AppModule {
       .forRoutes('*');
     consumer
       .apply(AuditProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(BlockchainProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(RelayerProxyMiddleware)
+      .forRoutes('*');
+    consumer
+      .apply(CryptoProxyMiddleware)
       .forRoutes('*');
   }
 }

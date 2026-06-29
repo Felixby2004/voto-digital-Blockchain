@@ -1,0 +1,62 @@
+[
+  {
+    "inputs": [],
+    "name": "getVoteCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "index", "type": "uint256" }],
+    "name": "getEncryptedVote",
+    "outputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "merkleRoot",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isActive",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "nullifier", "type": "bytes32" }],
+    "name": "isNullifierUsed",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256[8]", "name": "proof", "type": "uint256[8]" },
+      { "internalType": "bytes32", "name": "nullifier", "type": "bytes32" },
+      { "internalType": "bytes", "name": "encryptedVote", "type": "bytes" }
+    ],
+    "name": "castVote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "_root", "type": "bytes32" }],
+    "name": "setMerkleRoot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "closeElection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
