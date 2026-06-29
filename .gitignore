@@ -1,0 +1,130 @@
+# ============================================
+# DEPENDENCIAS
+# ============================================
+node_modules/
+.pnpm-store/
+**/node_modules/
+
+# ============================================
+# ARCHIVOS DE ENTORNO Y SECRETOS
+# ============================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+
+# ============================================
+# ARCHIVOS COMPILADOS / BUILD
+# ============================================
+dist/
+build/
+out/
+.next/
+**/dist/
+**/build/
+**/out/
+**.tsbuildinfo
+
+# ============================================
+# PRISMA (Base de Datos)
+# ============================================
+.prisma/
+**/prisma/*.db
+**/prisma/*.sqlite
+migrations/
+*.db
+
+# ============================================
+# SMART CONTRACTS (Hardhat / Foundry)
+# ============================================
+contracts/artifacts/
+contracts/cache/
+contracts/coverage/
+contracts/typechain-types/
+contracts/gas-report.txt
+contracts/coverage.json
+**/artifacts/
+**/cache/
+**/typechain-types/
+
+# ============================================
+# CIRCUITOS ZKP (Circom / snarkjs)
+# ============================================
+packages/crypto-core/build/
+packages/crypto-core/inputs/
+packages/crypto-core/outputs/
+*.r1cs
+*.zkey
+*.wtns
+*.ptau
+*.wasm
+**/circuits/build/
+**/circuits/inputs/
+**/circuits/outputs/
+*.zkey
+*.r1cs
+*.wtns
+*.ptau
+
+# ============================================
+# LOGS Y ARCHIVOS TEMPORALES
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+*.tmp
+*.temp
+
+# ============================================
+# SISTEMA OPERATIVO
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ============================================
+# EDITORES Y CONFIGURACIÓN LOCAL
+# ============================================
+.vscode/
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/launch.json
+
+# ============================================
+# COBERTURA DE PRUEBAS
+# ============================================
+coverage/
+.nyc_output/
+**/coverage/
+
+# ============================================
+# OTROS ARCHIVOS TEMPORALES DE NODE
+# ============================================
+*.tgz
+*.tar.gz
+*.zip
+
+# ============================================
+# ARCHIVOS ESPECÍFICOS DE APPS (Next.js)
+# ============================================
+apps/web/.next/
+apps/admin/.next/
+apps/web/out/
+apps/admin/out/
+
+# ============================================
+# ARCHIVOS DE TESTS Y REPORTS
+# ============================================
+test-results/
+**/test-results/
+jest.config.js (si es generado, aunque mejor subirlo)

@@ -1,0 +1,272 @@
+// Este es el esquema maestro. Ningún microservicio modifica esto directamente.
+// Solo el paquete "database" lo gestiona.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS GLOBALES
+// ==========================================
+enum RolUsuario {
+  ESTUDIANTE
+  PROFESOR
+  ADMINISTRADOR_ELECTORAL
+  AUDITOR
+  SUPER_ADMINISTRADOR
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  BLOQUEADO
+}
+
+enum RolAdmin {
+  ADMIN_ELECTORAL
+  SUPER_ADMIN
+}
+
+enum EstadoEleccion {
+  BORRADOR
+  PROGRAMADA
+  ACTIVA
+  CERRADA
+  FINALIZADA
+  ARCHIVADA
+}
+
+enum EstadoCandidato {
+  ACTIVO
+  INACTIVO
+}
+
+// ==========================================
+// 1. USUARIO
+// ==========================================
+model Usuario {
+  id              String         @id @default(uuid())
+  nombre          String
+  email           String         @unique
+  passwordHash    String
+  rol             RolUsuario     @default(ESTUDIANTE)
+  estado          EstadoUsuario  @default(ACTIVO)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relaciones
+  estudiante      Estudiante?
+  profesor        Profesor?
+  administrador   Administrador?
+  auditor         Auditor?
+
+  @@map("usuarios")
+}
+
+// ==========================================
+// 2. ESTUDIANTE
+// ==========================================
+model Estudiante {
+  id                String         @id @default(uuid())
+  usuarioId         String         @unique
+  dni               String         @unique
+  codigoUniversitario String        @unique
+  facultad          String
+  escuela           String
+  carrera           String
+  estadoHabilitado  Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  padrones          PadronElectoral[]
+
+  @@map("estudiantes")
+}
+
+// ==========================================
+// 3. PROFESOR (NUEVO)
+// ==========================================
+model Profesor {
+  id                String         @id @default(uuid())
+  usuarioId         String         @unique
+  dni               String         @unique
+  codigoEmpleado    String         @unique
+  facultad          String
+  escuela           String?        // Opcional
+  departamento      String?        // Opcional
+  estadoHabilitado  Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  padrones          PadronElectoral[]
+
+  @@map("profesores")
+}
+
+// ==========================================
+// 4. ADMINISTRADOR
+// ==========================================
+model Administrador {
+  id                String         @id @default(uuid())
+  usuarioId         String         @unique
+  mfaSecret         String?
+  rol               RolAdmin       @default(ADMIN_ELECTORAL)
+  estado            EstadoUsuario  @default(ACTIVO)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("administradores")
+}
+
+// ==========================================
+// 5. AUDITOR
+// ==========================================
+model Auditor {
+  id                String         @id @default(uuid())
+  usuarioId         String         @unique
+  createdAt         DateTime       @default(now())
+
+  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("auditores")
+}
+
+// ==========================================
+// 6. FACULTAD
+// ==========================================
+model Facultad {
+  id                String         @id @default(uuid())
+  nombre            String         @unique
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  escuelas          Escuela[]
+
+  @@map("facultades")
+}
+
+// ==========================================
+// 7. ESCUELA
+// ==========================================
+model Escuela {
+  id                String         @id @default(uuid())
+  nombre            String
+  facultadId        String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  facultad          Facultad       @relation(fields: [facultadId], references: [id], onDelete: Cascade)
+  carreras          Carrera[]
+
+  @@unique([nombre, facultadId])
+  @@map("escuelas")
+}
+
+// ==========================================
+// 8. CARRERA
+// ==========================================
+model Carrera {
+  id                String         @id @default(uuid())
+  nombre            String
+  escuelaId         String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  escuela           Escuela        @relation(fields: [escuelaId], references: [id], onDelete: Cascade)
+
+  @@unique([nombre, escuelaId])
+  @@map("carreras")
+}
+
+// ==========================================
+// 9. ELECCIÓN
+// ==========================================
+model Eleccion {
+  id                String            @id @default(uuid())
+  nombre            String
+  descripcion       String?
+  estado            EstadoEleccion    @default(BORRADOR)
+  fechaInicio       DateTime?
+  fechaFin          DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  facultadesIds     String[]
+  escuelasIds       String[]
+  carrerasIds       String[]
+
+  candidatos        Candidato[]
+  padrones          PadronElectoral[]
+  auditorias        AuditoriaEvento[]
+
+  @@map("elecciones")
+}
+
+// ==========================================
+// 10. CANDIDATO
+// ==========================================
+model Candidato {
+  id                String         @id @default(uuid())
+  nombre            String
+  apellido          String
+  foto              String?
+  descripcion       String?
+  cargo             String
+  facultad          String?
+  escuela           String?
+  estado            EstadoCandidato @default(ACTIVO)
+  eleccionId        String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  eleccion          Eleccion       @relation(fields: [eleccionId], references: [id], onDelete: Cascade)
+
+  @@map("candidatos")
+}
+
+// ==========================================
+// 11. PADRÓN ELECTORAL (MODIFICADO)
+// ==========================================
+model PadronElectoral {
+  id                String         @id @default(uuid())
+  estudianteId      String?        // Ahora nullable
+  profesorId        String?        // Nuevo campo
+  eleccionId        String
+  estadoHabilitado  Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  estudiante        Estudiante?    @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  profesor          Profesor?      @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+  eleccion          Eleccion       @relation(fields: [eleccionId], references: [id], onDelete: Cascade)
+
+  @@unique([estudianteId, eleccionId])
+  @@unique([profesorId, eleccionId])
+  @@map("padrones_electorales")
+}
+
+// ==========================================
+// 12. AUDITORÍA (LOGS ADMINISTRATIVOS)
+// ==========================================
+model AuditoriaEvento {
+  id                String         @id @default(uuid())
+  tipoEvento        String
+  descripcion       String
+  adminId           String?
+  timestamp         DateTime       @default(now())
+  metadata          Json?
+
+  eleccion          Eleccion?      @relation(fields: [eleccionId], references: [id])
+  eleccionId        String?
+
+  @@map("auditoria_eventos")
+}

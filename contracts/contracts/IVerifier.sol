@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+// Interfaz genérica para el Verificador Groth16 generado por snarkjs
+interface IVerifier {
+    function verifyProof(
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[4] memory input
+    ) external view returns (bool);
+}

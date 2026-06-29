@@ -1,0 +1,26 @@
+{
+  "name": "universidad-voto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Votación Digital Universitario - Syscoin NEVM",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:gateway": "pnpm --filter api-gateway start:dev",
+    "dev:auth": "pnpm --filter auth-service start:dev",
+    "dev:padron": "pnpm --filter padron-service start:dev",
+    "dev:all": "pnpm run -r --parallel start:dev",
+    "build:all": "pnpm run -r build",
+    "db:generate": "pnpm --filter database db:generate",
+    "db:migrate": "pnpm --filter database db:migrate",
+    "db:seed": "pnpm --filter database db:seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

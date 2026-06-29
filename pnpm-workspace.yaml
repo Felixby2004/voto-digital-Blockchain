@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "apps/backend/*"
+  - "apps/bots/*"
+  - "packages/*"
+  - "contracts"
+allowBuilds:
+  '@nestjs/core': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  bcrypt: true
+  blake-hash: true
+  keccak: true
+  prisma: true
+  secp256k1: true
