@@ -24,7 +24,7 @@
       "@crypto-core/*": ["packages/crypto-core/src/*"],
       "@database/*": ["packages/database/src/*"],
       "@shared-types/*": ["packages/shared-types/src/*"],
-      "@common/*": ["packages/common/src/*"]
+      "@common/*": ["packages/common/dist/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

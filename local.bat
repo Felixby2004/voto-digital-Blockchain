@@ -1,6 +1,21 @@
 @echo off
 :: Batch script to run the services of Voto Digital in order
 
+:: Automatically terminate any stale Node processes on project ports from previous runs
+powershell -Command "Get-Process -Id (Get-NetTCPConnection -LocalPort 3000,3001,3002,3003,3004,3005,3006,3007,3008,3009,3010,3011,3012,3013,3014,3015 -ErrorAction SilentlyContinue).OwningProcess -ErrorAction SilentlyContinue | Where Name -eq node | Stop-Process -Force" >nul 2>&1
+
+:: Clear global DATABASE_URL to force services to use local .env DATABASE_URL
+set DATABASE_URL=
+
+:: Load local .env variables into CMD environment to resolve lifecycle load issues
+if exist .env (
+    powershell -Command "Get-Content .env | Where-Object { $_ -and -not $_.StartsWith('#') } | Foreach-Object { $name, $val = $_ -split '=', 2; if ($name -and $val) { $val = $val.Trim().Trim([char]34).Trim([char]39); Write-Output ('set ' + $name.Trim() + '=' + $val) } } | Out-File -Encoding ascii env_temp.bat"
+    if exist env_temp.bat (
+        call env_temp.bat
+        del env_temp.bat
+    )
+)
+
 echo ===================================================
 echo   Starting Voto Digital Services
 echo ===================================================
@@ -20,6 +35,7 @@ if not exist .env (
     echo [INFO] .env file not found. Copying from .env.example...
     copy .env.example .env
 )
+copy /Y .env apps\.env >nul
 
 :: 3. Verify node_modules
 if not exist node_modules (
@@ -70,8 +86,12 @@ echo [9/11] Starting Relayer Service...
 start "Relayer Service" pnpm --filter relayer-service start:dev
 timeout /t 3 /nobreak >nul
 
-echo [10/11] Starting Crypto Service...
+echo [10/12] Starting Crypto Service...
 start "Crypto Service" pnpm --filter crypto-service start:dev
+timeout /t 3 /nobreak >nul
+
+echo [11/12] Starting Web Frontend...
+start "Web Frontend" pnpm run dev:web
 timeout /t 3 /nobreak >nul
 
 echo ===================================================

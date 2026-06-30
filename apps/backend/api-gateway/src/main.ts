@@ -11,8 +11,14 @@ async function bootstrap() {
 
   // Seguridad
   app.use(helmet());
+  
+  const corsOriginSetting = config.get('CORS_ORIGIN', '*');
+  const allowedOrigins = corsOriginSetting.includes(',') 
+    ? corsOriginSetting.split(',').map((o: string) => o.trim()) 
+    : corsOriginSetting;
+
   app.enableCors({
-    origin: config.get('CORS_ORIGIN', '*'),
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

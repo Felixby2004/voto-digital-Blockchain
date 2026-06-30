@@ -13,3 +13,4 @@ allowBuilds:
   keccak: true
   prisma: true
   secp256k1: true
+  unrs-resolver: true
