@@ -326,6 +326,35 @@ pnpm --filter contracts deploy:testnet
 
 ---
 
+# 10. Ejecutar con Docker (Toda la Aplicación)
+
+Si prefieres no instalar dependencias locales complejas y levantar toda la arquitectura de una vez, puedes utilizar **Docker Compose**. Esto construirá imágenes para todos los microservicios, el frontend y levantará la base de datos PostgreSQL y Prisma Studio.
+
+## Construir y levantar todos los servicios
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+docker-compose up --build -d
+```
+
+Este comando levantará los siguientes servicios:
+- **Base de datos:** PostgreSQL en el puerto `5432`.
+- **Prisma Studio:** Interfaz gráfica para la base de datos en `http://localhost:5555`.
+- **Microservicios (Backend):** `api-gateway` (3000), `auth-service` (3001), `electoral-service` (3003), `candidate-service` (3004), `padron-simple` (3005), `dashboard-service` (3007), `audit-service` (3008), `blockchain-service` (3009), `relayer-service` (3010), `crypto-service` (3011).
+- **Frontend Web:** `http://localhost:3002`.
+- **Frontend Admin:** `http://localhost:3012`.
+
+## Detener los servicios
+
+Para detener la ejecución de los contenedores:
+
+```bash
+docker-compose down
+```
+
+---
+
 # Posibles errores
 
 | Error                                       | Solución                                                                                                                                  |

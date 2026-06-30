@@ -1,0 +1,62 @@
+FROM node:20-alpine AS builder
+RUN apk update && apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+RUN corepack enable pnpm
+
+ARG APP_NAME
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+COPY packages/ ./packages/
+COPY apps/${APP_NAME}/ ./apps/${APP_NAME}/
+
+# Next.js telemetry disable
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN pnpm install --filter ${APP_NAME}... --frozen-lockfile
+
+# Generate prisma client if needed by frontend
+RUN pnpm --filter database db:generate || true
+
+RUN pnpm --filter ${APP_NAME} build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN apk update && apk add --no-cache openssl
+
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next/static ./apps/${APP_NAME}/.next/static
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
+
+# Si el standalone no está configurado, copiamos de forma estándar
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/packages ./packages
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/package.json ./apps/${APP_NAME}/
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next ./apps/${APP_NAME}/.next
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public || true
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+
+# Run standard next start
+CMD ["sh", "-c", "cd apps/${APP_NAME} && npm run start"]

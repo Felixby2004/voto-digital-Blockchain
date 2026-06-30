@@ -1,0 +1,59 @@
+# Base image for building
+FROM node:20-alpine AS builder
+
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk update && apk add --no-cache libc6-compat openssl
+
+# Set working directory
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable pnpm
+
+# Accept build arguments
+ARG APP_NAME
+
+# Copy root configurations
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+
+# Copy packages
+COPY packages/ ./packages/
+
+# Copy the specific app
+COPY apps/backend/${APP_NAME}/ ./apps/backend/${APP_NAME}/
+
+# Install dependencies for the specific app and its workspace dependencies
+RUN pnpm install --filter ${APP_NAME}... --frozen-lockfile
+
+# Generate Prisma Client for the current architecture (Linux)
+RUN pnpm --filter database db:generate
+
+# Build the specific app
+RUN pnpm --filter ${APP_NAME} build
+
+# Prune dev dependencies to reduce image size
+RUN pnpm install --filter ${APP_NAME}... --prod --frozen-lockfile
+
+# Runner image
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+RUN apk update && apk add --no-cache openssl
+
+# Accept build arguments
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+ENV NODE_ENV production
+
+# Copy necessary files from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/backend/${APP_NAME}/package.json ./apps/backend/${APP_NAME}/
+COPY --from=builder /app/apps/backend/${APP_NAME}/dist ./apps/backend/${APP_NAME}/dist
+
+# Expose generic port (will be mapped via docker-compose)
+EXPOSE 3000
+
+# Start the application
+CMD ["sh", "-c", "node apps/backend/${APP_NAME}/dist/main"]
