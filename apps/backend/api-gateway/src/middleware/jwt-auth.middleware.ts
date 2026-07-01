@@ -21,8 +21,10 @@ export class JwtAuthMiddleware implements NestMiddleware {
     return (
       p.includes('/auth/login') ||
       p.includes('/auth/refresh') ||
+      p.includes('/candidatos') ||
       o.includes('/auth/login') ||
-      o.includes('/auth/refresh')
+      o.includes('/auth/refresh') ||
+      o.includes('/candidatos')
     );
   }
 

@@ -23,6 +23,7 @@ export class CandidateController {
     return this.candidateService.create(dto);
   }
 
+  @Public()
   @Get()
   async findAll(@Query('eleccionId') eleccionId?: string) {
     console.log('[CandidateController] findAll() invocado — eleccionId:', eleccionId);
