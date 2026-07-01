@@ -93,6 +93,7 @@ services:
       - "${ELECTORAL_PORT:-3003}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - ELECTORAL_PORT=3000
     depends_on:
       db-deploy:
@@ -118,6 +119,7 @@ services:
       - "${CANDIDATE_PORT:-3004}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - CANDIDATE_PORT=3000
     depends_on:
       db-deploy:
@@ -143,6 +145,7 @@ services:
       - "${PADRON_PORT:-3005}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - PADRON_PORT=3000
     depends_on:
       db-deploy:
@@ -168,6 +171,7 @@ services:
       - "${DASHBOARD_PORT:-3007}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - DASHBOARD_PORT=3000
     depends_on:
       db-deploy:
@@ -187,6 +191,7 @@ services:
       - "${AUDIT_PORT:-3008}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - AUDIT_PORT=3000
     depends_on:
       db-deploy:
@@ -206,6 +211,7 @@ services:
       - "3009:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - BLOCKCHAIN_PORT=3000
     depends_on:
       db-deploy:
@@ -225,6 +231,7 @@ services:
       - "3010:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - RELAYER_PORT=3000
     depends_on:
       db-deploy:
@@ -244,6 +251,7 @@ services:
       - "3011:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - CRYPTO_PORT=3000
     depends_on:
       db-deploy:
