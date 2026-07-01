@@ -16,10 +16,16 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    // Red de prueba de Syscoin (Mainnet es 57, Testnet es 5700)
+    // Red de prueba de Syscoin
     syscoin_testnet: {
       url: process.env.SYSCOIN_RPC_URL || "https://rpc.syscoin.org",
       chainId: parseInt(process.env.SYSCOIN_CHAIN_ID || "57"),
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    // zkTanenbaum Testnet de la captura
+    zktanenbaum_testnet: {
+      url: process.env.ZKTANENBAUM_RPC_URL || "https://rpc-zk.tanenbaum.io",
+      chainId: parseInt(process.env.ZKTANENBAUM_CHAIN_ID || "57057"),
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     // Hardhat local para pruebas

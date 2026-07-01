@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network syscoin_testnet",
+    "deploy:zktanenbaum": "hardhat run scripts/deploy.ts --network zktanenbaum_testnet",
     "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
     "test": "hardhat test"
   },

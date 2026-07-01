@@ -320,7 +320,10 @@ pnpm --filter contracts compile
 # Desplegar localmente en red Hardhat (in-memory)
 pnpm --filter contracts deploy:local
 
-# Desplegar en Syscoin Testnet (requiere configurar clave privada y RPC en el .env de la raíz)
+# Desplegar en zkTanenbaum Testnet (requiere configurar clave privada y RPC en el .env de la raíz)
+pnpm --filter contracts deploy:zktanenbaum
+
+# Desplegar en Syscoin Testnet
 pnpm --filter contracts deploy:testnet
 ```
 
@@ -409,7 +412,7 @@ universidad-voto/
 * [ ] Ejecutar `pnpm db:generate`
 * [ ] Ejecutar `pnpm db:migrate`
 * [ ] Compilar circuito ZKP y exportar Verifier (`pnpm --filter crypto-core circuit:full`)
-* [ ] Desplegar smart contracts con verificador real (`pnpm --filter contracts deploy:local` o `deploy:testnet`)
+* [ ] Desplegar smart contracts con verificador real (`pnpm --filter contracts deploy:local`, `deploy:testnet` o `deploy:zktanenbaum`)
 * [ ] Levantar los 7 microservicios (automático con `.\local.bat` o manual)
 * [ ] Verificar los endpoints de salud
 * [ ] (Opcional) Importar el archivo `estudiantes.csv`
