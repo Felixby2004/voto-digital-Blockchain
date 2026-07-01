@@ -11,22 +11,29 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter, LoggingInterceptor } from 'common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
+  try {
+    console.log('[ElectoralService] Iniciando bootstrap...');
+    const app = await NestFactory.create(AppModule);
+    const config = app.get(ConfigService);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalInterceptors(new LoggingInterceptor());
 
-  const port = config.get<number>('ELECTORAL_PORT', 3003);
-  await app.listen(port);
-  console.log(`🗳️  Electoral Service corriendo en http://localhost:${port}`);
+    const port = config.get<number>('ELECTORAL_PORT', 3003);
+    console.log('[ElectoralService] Puerto configurado:', port);
+    await app.listen(port);
+    console.log(`🗳️  Electoral Service corriendo en http://localhost:${port}`);
+  } catch (err) {
+    console.error('[ElectoralService] ❌ ERROR FATAL EN ARRANQUE:', err);
+    process.exit(1);
+  }
 }
 bootstrap();

@@ -5,7 +5,9 @@ export const useCandidates = (electionId?: string) => {
   return useQuery({
     queryKey: ['candidates', electionId],
     queryFn: async () => {
+      console.log('[useCandidates] queryFn ejecutándose para electionId:', electionId);
       const res = await candidateApi.getAll(electionId);
+      console.log('[useCandidates] Respuesta:', res.data);
       return res.data;
     },
   });

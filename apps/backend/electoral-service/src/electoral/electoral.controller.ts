@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ElectoralService } from './electoral.service';
 import { CreateEleccionDto } from './dto/create-eleccion.dto';
 import { UpdateEleccionDto } from './dto/update-eleccion.dto';
@@ -24,8 +24,11 @@ export class ElectoralController {
   }
 
   @Get()
-  findAll() {
-    return this.electoralService.findAll();
+  async findAll() {
+    console.log('[ElectoralController] findAll() invocado');
+    const result = await this.electoralService.findAll();
+    console.log('[ElectoralController] findAll() devolvió', Array.isArray(result) ? result.length : 'no-array', 'elementos');
+    return result;
   }
 
   @Get(':id')
@@ -72,5 +75,12 @@ export class ElectoralController {
   @Roles(...ADMIN_ROLES)
   archivar(@Param('id') id: string) {
     return this.electoralService.archivar(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(...ADMIN_ROLES)
+  delete(@Param('id') id: string) {
+    return this.electoralService.delete(id);
   }
 }

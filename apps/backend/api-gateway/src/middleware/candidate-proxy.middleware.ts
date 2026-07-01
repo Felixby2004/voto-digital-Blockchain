@@ -23,9 +23,11 @@ export class CandidateProxyMiddleware implements NestMiddleware {
       return next();
     }
 
+    const path = req.originalUrl.replace('/api', '');
+    const url = `${this.candidateServiceUrl}${path}`;
+    console.log(`[CandidateProxy] ${req.method} ${req.originalUrl} → ${url}`);
+
     try {
-      const path = req.originalUrl.replace('/api', '');
-      const url = `${this.candidateServiceUrl}${path}`;
       const method = req.method;
       const headers = req.headers as Record<string, string>;
       const body = req.body;
@@ -44,8 +46,10 @@ export class CandidateProxyMiddleware implements NestMiddleware {
         }),
       );
 
+      console.log(`[CandidateProxy] Respuesta ${response.status} para ${url}`);
       res.status(response.status).json(response.data);
     } catch (error) {
+      console.error(`[CandidateProxy] Error proxying ${url}:`, error.message || error);
       if (error.response) {
         res.status(error.response.status).json(error.response.data);
       } else {

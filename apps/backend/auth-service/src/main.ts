@@ -11,22 +11,29 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter, LoggingInterceptor } from 'common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
+  try {
+    console.log('[AuthService] Iniciando bootstrap...');
+    const app = await NestFactory.create(AppModule);
+    const config = app.get(ConfigService);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalInterceptors(new LoggingInterceptor());
 
-  const port = config.get<number>('AUTH_PORT', 3001);
-  await app.listen(port);
-  console.log(`🔐 Auth Service corriendo en http://localhost:${port}`);
+    const port = config.get<number>('AUTH_PORT', 3001);
+    console.log('[AuthService] Puerto configurado:', port);
+    await app.listen(port);
+    console.log(`🔐 Auth Service corriendo en http://localhost:${port}`);
+  } catch (err) {
+    console.error('[AuthService] ❌ ERROR FATAL EN ARRANQUE:', err);
+    process.exit(1);
+  }
 }
 bootstrap();

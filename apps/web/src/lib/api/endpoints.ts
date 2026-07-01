@@ -3,8 +3,8 @@ import { User, Candidate, Election, AuthTokens } from '@/types';
 
 export const authApi = {
   login: (identificador: string, password: string) =>
-    api.post<{ user: User; tokens: AuthTokens }>('/auth/login', { identificador, password }),
-  refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+    api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', { identificador, password }),
+  refresh: (refreshToken: string) => api.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken }),
   profile: () => api.get<{ user: User }>('/auth/profile'),
 };
 
@@ -34,10 +34,6 @@ export const candidateApi = {
   delete: (id: string) => api.delete(`/candidatos/${id}`),
 };
 
-export const dashboardApi = {
-  getStats: () => api.get('/dashboard/stats'),
-};
-
 export const padronApi = {
   importar: (tipo: string, file: File, habilitar: boolean) => {
     const formData = new FormData();
@@ -47,7 +43,6 @@ export const padronApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  getEstudiantes: () => api.get('/padron/estudiantes'),
 };
 
 export const votingApi = {

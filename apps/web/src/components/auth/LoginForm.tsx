@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuthStore } from '@/lib/store/authStore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,10 +44,13 @@ export const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('[LoginForm] Enviando login...');
       const result = await loginMutation.mutateAsync(data);
+      console.log('[LoginForm] Resultado completo:', JSON.stringify(result, null, 2));
       const rol = result?.user?.rol as RolUsuario;
       const destino = getRedirectPath(rol);
-      console.log(`✅ LOGIN EXITOSO — rol: ${rol} → redirigiendo a ${destino}`);
+      console.log(`[LoginForm] ✅ LOGIN EXITOSO — rol: ${rol} → redirigiendo a ${destino}`);
+      console.log('[LoginForm] Estado del store post-login:', JSON.stringify(useAuthStore.getState(), null, 2));
       router.push(destino);
     } catch (error: any) {
       console.group('❌ LOGIN FALLIDO');

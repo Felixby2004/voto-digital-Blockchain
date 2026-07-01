@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateCandidateDto {
   @IsOptional()
@@ -10,7 +10,7 @@ export class UpdateCandidateDto {
   apellido?: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsString()
   foto?: string;
 
   @IsOptional()

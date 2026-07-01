@@ -56,25 +56,6 @@ services:
     networks:
       - voto-network
 
-  api-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-      args:
-        APP_NAME: api-gateway
-    container_name: api-gateway
-    ports:
-      - "${GATEWAY_PORT:-3000}:3000"
-    environment:
-      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
-      - JWT_SECRET=${JWT_SECRET}
-      - DOCKER_ENV=true
-    depends_on:
-      db-deploy:
-        condition: service_completed_successfully
-    networks:
-      - voto-network
-
   auth-service:
     build:
       context: .
@@ -91,6 +72,13 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/auth/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -109,6 +97,13 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/elecciones/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -127,6 +122,13 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/candidatos/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -145,6 +147,13 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/padron/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -163,6 +172,7 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -181,9 +191,10 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - voto-network
-      
+
   blockchain-service:
     build:
       context: .
@@ -199,9 +210,10 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - voto-network
-      
+
   relayer-service:
     build:
       context: .
@@ -217,9 +229,10 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - voto-network
-      
+
   crypto-service:
     build:
       context: .
@@ -235,6 +248,35 @@ services:
     depends_on:
       db-deploy:
         condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: api-gateway
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - DOCKER_ENV=true
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_healthy
+      electoral-service:
+        condition: service_healthy
+      candidate-service:
+        condition: service_healthy
+      padron-simple:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - voto-network
 
@@ -248,11 +290,12 @@ services:
     ports:
       - "3002:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:${GATEWAY_PORT:-3000}
+      - NEXT_PUBLIC_API_URL=http://localhost:${GATEWAY_PORT:-3000}/api
+    depends_on:
+      api-gateway:
+        condition: service_started
     networks:
       - voto-network
-
-
 
 volumes:
   pgdata:

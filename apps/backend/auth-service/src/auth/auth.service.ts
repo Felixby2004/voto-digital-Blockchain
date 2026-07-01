@@ -150,7 +150,7 @@ export class AuthService {
         expiresIn: this.config.get('JWT_EXPIRATION', '15m'),
       });
 
-      return { accessToken: newAccessToken };
+      return { accessToken: newAccessToken, refreshToken };
     } catch (error) {
       this.logger.warn('Refresh token inválido o expirado');
       throw new UnauthorizedException('Refresh token inválido o expirado');

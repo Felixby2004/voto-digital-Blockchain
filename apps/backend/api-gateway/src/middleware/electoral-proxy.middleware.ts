@@ -19,13 +19,19 @@ export class ElectoralProxyMiddleware implements NestMiddleware {
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
-    if (!req.originalUrl.startsWith('/api/elecciones')) {
+    if (
+      !req.originalUrl.startsWith('/api/elecciones') &&
+      !req.originalUrl.startsWith('/api/voto')
+    ) {
       return next();
     }
 
+    const path = req.originalUrl.replace('/api', '');
+    const url = `${this.electoralServiceUrl}${path}`;
+    console.log(`[ElectoralProxy] ${req.method} ${req.originalUrl} → ${url}`);
+    console.log(`[ElectoralProxy] Authorization header presente?`, !!req.headers['authorization']);
+
     try {
-      const path = req.originalUrl.replace('/api', '');
-      const url = `${this.electoralServiceUrl}${path}`;
       const method = req.method;
       const headers = req.headers as Record<string, string>;
       const body = req.body;
@@ -44,9 +50,12 @@ export class ElectoralProxyMiddleware implements NestMiddleware {
         }),
       );
 
+      console.log(`[ElectoralProxy] Respuesta ${response.status} para ${url}`);
       res.status(response.status).json(response.data);
     } catch (error) {
+      console.error(`[ElectoralProxy] Error proxying ${url}:`, error.message || error);
       if (error.response) {
+        console.error(`[ElectoralProxy] Status error:`, error.response.status, error.response.data);
         res.status(error.response.status).json(error.response.data);
       } else {
         res.status(HttpStatus.SERVICE_UNAVAILABLE).json({

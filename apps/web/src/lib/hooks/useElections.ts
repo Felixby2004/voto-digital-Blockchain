@@ -5,7 +5,14 @@ export const useElections = () => {
   return useQuery({
     queryKey: ['elections'],
     queryFn: async () => {
+      console.log('[useElections] queryFn ejecutándose...');
       const res = await electionApi.getAll();
+      console.log('[useElections] Respuesta cruda:', res);
+      console.log('[useElections] res.data:', res.data);
+      console.log('[useElections] res.data es array?', Array.isArray(res.data));
+      if (Array.isArray(res.data)) {
+        console.log('[useElections] Cantidad de elecciones:', res.data.length);
+      }
       return res.data;
     },
   });
@@ -15,7 +22,9 @@ export const useElection = (id: string) => {
   return useQuery({
     queryKey: ['election', id],
     queryFn: async () => {
+      console.log('[useElection] queryFn ejecutándose para id:', id);
       const res = await electionApi.getById(id);
+      console.log('[useElection] Respuesta:', res.data);
       return res.data;
     },
     enabled: !!id,
