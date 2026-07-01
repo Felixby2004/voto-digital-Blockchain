@@ -107,7 +107,7 @@ export const LoginForm = () => {
             <span className="text-white font-black text-2xl">U</span>
           </div>
           <div>
-            <h3 className="text-2xl font-extrabold text-slate-900">Voto Digital UNT</h3>
+            <h3 className="text-2xl font-extrabold text-slate-900">NextVote UNT</h3>
             <p className="text-sm text-slate-500">Sistema Oficial de Votaciones</p>
           </div>
         </div>
