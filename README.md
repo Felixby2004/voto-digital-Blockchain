@@ -26,11 +26,9 @@ npm install -g pnpm
 # 2. Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO> universidad-voto
-cd universidad-voto
+git clone https://github.com/Felixby2004/voto-digital-Blockchain.git
+cd voto-digital-Blockchain
 ```
-
-Reemplaza `<URL_DEL_REPOSITORIO>` por la URL del repositorio de GitHub.
 
 ---
 
