@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useElection } from '@/lib/hooks/useElections';
 import { useCandidates, useCastVote } from '@/lib/hooks/useVoting';
 import { CandidateCard } from '@/components/voting/CandidateCard';
 import { VoteStatus } from '@/components/voting/VoteStatus';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Candidate } from '@/types';
 
 function ErrorCard({ title, detail }: { title: string; detail: string }) {
@@ -28,7 +29,10 @@ export default function VotingPage() {
   const { data: election, isLoading: loadingElection, error: electionError } = useElection(electionId);
   const { data: candidates, isLoading: loadingCandidates, error: candidatesError } = useCandidates(electionId);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [voteCompleted, setVoteCompleted] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const castVoteMutation = useCastVote();
+  const { logout } = useAuth();
 
   const handleVote = async () => {
     if (!selectedCandidate) return;
@@ -37,11 +41,23 @@ export default function VotingPage() {
         candidatoId: selectedCandidate.id,
         eleccionId: electionId,
       });
-      router.push('/confirmacion');
+      setVoteCompleted(true);
     } catch (error) {
       console.error('Vote failed', error);
     }
   };
+
+  // Cuenta regresiva y logout automático después de votar
+  useEffect(() => {
+    if (!voteCompleted) return;
+    if (countdown <= 0) {
+      logout();
+      router.push('/login');
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [voteCompleted, countdown, logout, router]);
 
   if (loadingElection || loadingCandidates) {
     return (
@@ -78,6 +94,28 @@ export default function VotingPage() {
         title="Elección no encontrada"
         detail="La elección solicitada no existe o ha sido eliminada."
       />
+    );
+  }
+
+  if (voteCompleted) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-b from-green-50 to-white">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-4">✅</div>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">¡Voto Registrado!</h2>
+          <p className="text-slate-600 mb-2">Tu voto ha sido emitido exitosamente.</p>
+          <p className="text-slate-600 mb-6">
+            Serás desconectado del sistema en <span className="font-bold text-blue-900 text-xl">{countdown}</span> segundos...
+          </p>
+          <div className="w-full bg-slate-200 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-blue-900 h-2.5 rounded-full transition-all"
+              style={{ width: `${((5 - countdown) / 5) * 100}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-slate-400">Gracias por participar en las Elecciones UNT 2026.</p>
+        </div>
+      </div>
     );
   }
 

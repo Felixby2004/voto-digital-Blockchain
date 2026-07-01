@@ -23,6 +23,10 @@ export class UpdateCandidateDto {
 
   @IsOptional()
   @IsString()
+  partido?: string;
+
+  @IsOptional()
+  @IsString()
   facultad?: string;
 
   @IsOptional()

@@ -28,7 +28,7 @@ services:
       args:
         APP_NAME: auth-service
     container_name: db-deploy
-    command: ["sh", "-c", "cd packages/database && npx prisma migrate deploy && npx prisma db seed"]
+    command: ["sh", "-c", "cd packages/database && npx prisma db push --accept-data-loss && npx prisma db seed"]
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
     depends_on:

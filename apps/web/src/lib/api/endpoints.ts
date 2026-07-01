@@ -3,7 +3,7 @@ import { User, Candidate, Election, AuthTokens } from '@/types';
 
 export const authApi = {
   login: (identificador: string, password: string) =>
-    api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', { identificador, password }),
+    api.post<{ user: User; accessToken: string; refreshToken: string; eleccionActivaId?: string | null }>('/auth/login', { identificador, password }),
   refresh: (refreshToken: string) => api.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken }),
   profile: () => api.get<{ user: User }>('/auth/profile'),
 };

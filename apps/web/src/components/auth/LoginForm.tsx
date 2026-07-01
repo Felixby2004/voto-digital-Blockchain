@@ -48,7 +48,13 @@ export const LoginForm = () => {
       const result = await loginMutation.mutateAsync(data);
       console.log('[LoginForm] Resultado completo:', JSON.stringify(result, null, 2));
       const rol = result?.user?.rol as RolUsuario;
-      const destino = getRedirectPath(rol);
+      const eleccionActivaId = result?.eleccionActivaId;
+
+      // Si es votante (estudiante/profesor) y hay una elección activa asignada, ir directo a votar
+      const destino = (rol === 'ESTUDIANTE' || rol === 'PROFESOR') && eleccionActivaId
+        ? `/voting/${eleccionActivaId}`
+        : getRedirectPath(rol);
+
       console.log(`[LoginForm] ✅ LOGIN EXITOSO — rol: ${rol} → redirigiendo a ${destino}`);
       console.log('[LoginForm] Estado del store post-login:', JSON.stringify(useAuthStore.getState(), null, 2));
       router.push(destino);
