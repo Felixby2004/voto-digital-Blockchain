@@ -4,10 +4,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "node dist/prisma/seed.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc prisma/seed.ts --module commonjs --target ES2022 --outDir dist/prisma --esModuleInterop --skipLibCheck",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcrypt": "^5.1.1",
-    "prisma": "^5.14.0"
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

@@ -42,7 +42,7 @@ export class DashboardService {
       _count: { id: true },
     });
 
-    const estadoElecciones = estados.map((item) => ({
+    const estadoElecciones = estados.map((item: any) => ({
       estado: item.estado,
       cantidad: item._count.id,
     }));
@@ -99,7 +99,7 @@ export class DashboardService {
       throw new Error('Elección no encontrada');
     }
 
-    const totalHabilitados = eleccion.padrones.filter(p => p.estadoHabilitado).length;
+    const totalHabilitados = eleccion.padrones.filter((p: any) => p.estadoHabilitado).length;
     const totalCandidatos = eleccion.candidatos.length;
 
     return {

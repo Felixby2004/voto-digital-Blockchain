@@ -12,8 +12,10 @@ export class DashboardProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('DASHBOARD_PORT', 3007);
-    this.dashboardServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'dashboard-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('DASHBOARD_PORT', 3007);
+    this.dashboardServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

@@ -20,6 +20,23 @@ services:
     networks:
       - voto-network
 
+  # Inicializador para aplicar migraciones y sembrar datos de prueba
+  db-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: auth-service
+    container_name: db-deploy
+    command: ["sh", "-c", "cd packages/database && npx prisma migrate deploy && npx prisma db seed"]
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - voto-network
+
   # Utilidad para visualizar la BD
   prisma-studio:
     build:
@@ -34,8 +51,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -51,9 +68,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
       - JWT_SECRET=${JWT_SECRET}
+      - DOCKER_ENV=true
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -69,9 +87,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
       - JWT_SECRET=${JWT_SECRET}
+      - AUTH_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -86,9 +105,10 @@ services:
       - "${ELECTORAL_PORT:-3003}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - ELECTORAL_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -103,9 +123,10 @@ services:
       - "${CANDIDATE_PORT:-3004}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - CANDIDATE_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -120,9 +141,10 @@ services:
       - "${PADRON_PORT:-3005}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - PADRON_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -137,9 +159,10 @@ services:
       - "${DASHBOARD_PORT:-3007}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - DASHBOARD_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -154,9 +177,10 @@ services:
       - "${AUDIT_PORT:-3008}:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - AUDIT_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
       
@@ -171,9 +195,10 @@ services:
       - "3009:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - BLOCKCHAIN_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
       
@@ -188,9 +213,10 @@ services:
       - "3010:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - RELAYER_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
       
@@ -205,9 +231,10 @@ services:
       - "3011:3000"
     environment:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - CRYPTO_PORT=3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-deploy:
+        condition: service_completed_successfully
     networks:
       - voto-network
 
@@ -225,19 +252,7 @@ services:
     networks:
       - voto-network
 
-  admin:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-      args:
-        APP_NAME: admin
-    container_name: admin-frontend
-    ports:
-      - "3012:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:${GATEWAY_PORT:-3000}
-    networks:
-      - voto-network
+
 
 volumes:
   pgdata:

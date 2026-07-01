@@ -12,8 +12,10 @@ export class AuthProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('AUTH_PORT', 3001);
-    this.authServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'auth-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('AUTH_PORT', 3001);
+    this.authServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
