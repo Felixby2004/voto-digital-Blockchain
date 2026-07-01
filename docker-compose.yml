@@ -213,6 +213,12 @@ services:
       - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
       - JWT_SECRET=${JWT_SECRET}
       - BLOCKCHAIN_PORT=3000
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL}
+      - BLOCKCHAIN_CHAIN_ID=${BLOCKCHAIN_CHAIN_ID}
+      - VOTING_CONTRACT_ADDRESS=${VOTING_CONTRACT_ADDRESS}
+      - VERIFIER_CONTRACT_ADDRESS=${VERIFIER_CONTRACT_ADDRESS}
+      - ELECTION_ID=${ELECTION_ID}
     depends_on:
       db-deploy:
         condition: service_completed_successfully
