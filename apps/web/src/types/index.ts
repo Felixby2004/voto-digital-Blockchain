@@ -21,6 +21,7 @@ export interface Candidate {
   foto?: string;
   descripcion?: string;
   cargo: string;
+  partido?: string;
   facultad?: string;
   escuela?: string;
   estado: EstadoCandidato;

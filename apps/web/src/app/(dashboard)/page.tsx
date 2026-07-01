@@ -23,7 +23,9 @@ function getStatusColor(estado: string) {
 }
 
 export default function DashboardPage() {
-  const { data: elections, isLoading } = useElections();
+  const { data: elections, isLoading, error } = useElections();
+
+  console.log('[DashboardPage] Render — isLoading:', isLoading, '| error:', !!error, '| elections?:', !!elections, '| elections.length:', elections?.length);
 
   if (isLoading)
     return (
@@ -34,6 +36,42 @@ export default function DashboardPage() {
         </div>
       </div>
     );
+
+  if (error) {
+    const err = error as any;
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Error al cargar elecciones</h2>
+          <p className="text-slate-600 mb-4">
+            {err?.response?.status === 404
+              ? 'No se encontró el servicio de elecciones. Verifica que el API Gateway y el electoral-service estén corriendo.'
+              : err?.response?.status === 401
+                ? 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.'
+                : err?.message || 'Ocurrió un error inesperado al obtener las elecciones.'}
+          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-left text-xs text-red-800 font-mono overflow-auto">
+            <p>Status: {err?.response?.status || 'N/A'}</p>
+            <p>URL: {err?.config?.url || 'N/A'}</p>
+            <p>Base: {err?.config?.baseURL || 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!elections || elections.length === 0) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-4">🗳️</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">No hay elecciones disponibles</h2>
+          <p className="text-slate-600">Actualmente no hay elecciones activas o programadas. Vuelve más tarde.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">

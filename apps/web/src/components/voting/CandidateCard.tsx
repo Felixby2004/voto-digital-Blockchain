@@ -40,6 +40,13 @@ export const CandidateCard = ({ candidate, onSelect, selected }: CandidateCardPr
         <CardDescription className="text-center text-base font-medium text-slate-700">
           {candidate.cargo}
         </CardDescription>
+        {candidate.partido && (
+          <div className="text-center mt-2">
+            <span className="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
+              {candidate.partido}
+            </span>
+          </div>
+        )}
         {candidate.descripcion && (
           <CardDescription className="text-center mt-2">{candidate.descripcion}</CardDescription>
         )}

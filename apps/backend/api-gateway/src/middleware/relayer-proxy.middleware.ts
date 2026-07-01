@@ -12,8 +12,10 @@ export class RelayerProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('RELAYER_PORT', 3012);
-    this.relayerServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'relayer-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('RELAYER_PORT', 3012);
+    this.relayerServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

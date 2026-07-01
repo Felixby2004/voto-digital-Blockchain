@@ -12,8 +12,10 @@ export class CandidateProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('CANDIDATE_PORT', 3004);
-    this.candidateServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'candidate-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('CANDIDATE_PORT', 3004);
+    this.candidateServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -21,9 +23,11 @@ export class CandidateProxyMiddleware implements NestMiddleware {
       return next();
     }
 
+    const path = req.originalUrl.replace('/api', '');
+    const url = `${this.candidateServiceUrl}${path}`;
+    console.log(`[CandidateProxy] ${req.method} ${req.originalUrl} → ${url}`);
+
     try {
-      const path = req.originalUrl.replace('/api', '');
-      const url = `${this.candidateServiceUrl}${path}`;
       const method = req.method;
       const headers = req.headers as Record<string, string>;
       const body = req.body;
@@ -42,8 +46,10 @@ export class CandidateProxyMiddleware implements NestMiddleware {
         }),
       );
 
+      console.log(`[CandidateProxy] Respuesta ${response.status} para ${url}`);
       res.status(response.status).json(response.data);
     } catch (error) {
+      console.error(`[CandidateProxy] Error proxying ${url}:`, error.message || error);
       if (error.response) {
         res.status(error.response.status).json(error.response.data);
       } else {

@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuthStore } from '@/lib/store/authStore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { RolUsuario } from '@/types';
 
 const loginSchema = z.object({
   identificador: z.string().min(1, 'Identificador es requerido'),
@@ -15,6 +17,19 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
+
+/** Roles que tienen acceso al panel de administración */
+const ADMIN_ROLES: RolUsuario[] = [
+  'SUPER_ADMINISTRADOR',
+  'ADMINISTRADOR_ELECTORAL',
+  'AUDITOR',
+];
+
+function getRedirectPath(rol: RolUsuario): string {
+  if (ADMIN_ROLES.includes(rol)) return '/admin';
+  // ESTUDIANTE y PROFESOR van al panel de votación
+  return '/';
+}
 
 export const LoginForm = () => {
   const {
@@ -29,12 +44,60 @@ export const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await loginMutation.mutateAsync(data);
-      router.push('/');
-    } catch (error) {
-      console.error('Login failed', error);
+      console.log('[LoginForm] Enviando login...');
+      const result = await loginMutation.mutateAsync(data);
+      console.log('[LoginForm] Resultado completo:', JSON.stringify(result, null, 2));
+      const rol = result?.user?.rol as RolUsuario;
+      const eleccionActivaId = result?.eleccionActivaId;
+
+      // Si es votante (estudiante/profesor) y hay una elección activa asignada, ir directo a votar
+      const destino = (rol === 'ESTUDIANTE' || rol === 'PROFESOR') && eleccionActivaId
+        ? `/voting/${eleccionActivaId}`
+        : getRedirectPath(rol);
+
+      console.log(`[LoginForm] ✅ LOGIN EXITOSO — rol: ${rol} → redirigiendo a ${destino}`);
+      console.log('[LoginForm] Estado del store post-login:', JSON.stringify(useAuthStore.getState(), null, 2));
+      router.push(destino);
+    } catch (error: any) {
+      console.group('❌ LOGIN FALLIDO');
+      console.error('Error completo:', error);
+      if (error?.response) {
+        console.error('HTTP Status:', error.response.status, error.response.statusText);
+        console.error('Response Data:', error.response.data);
+        console.error('Request URL:', error.response.config?.url);
+        console.error('Request Payload (raw):', error.response.config?.data);
+      } else if (error?.request) {
+        console.error('⚡ NETWORK ERROR – sin respuesta del servidor');
+        console.error('Request:', error.request);
+      } else {
+        console.error('Error de configuración:', error?.message);
+      }
+      console.groupEnd();
     }
   };
+
+  // Info del error para mostrar en pantalla
+  const errorInfo = loginMutation.error as any;
+  const debugInfo = errorInfo
+    ? {
+        message: errorInfo?.message ?? 'Error desconocido',
+        status: errorInfo?.response?.status,
+        statusText: errorInfo?.response?.statusText,
+        responseData: errorInfo?.response?.data,
+        requestUrl: errorInfo?.response?.config?.url ?? errorInfo?.config?.url,
+        requestPayload: (() => {
+          try {
+            const raw = errorInfo?.response?.config?.data ?? errorInfo?.config?.data;
+            return raw ? JSON.parse(raw) : null;
+          } catch {
+            return null;
+          }
+        })(),
+        isNetworkError: !errorInfo?.response && !!errorInfo?.request,
+      }
+    : null;
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api';
 
   return (
     <Card className="w-full max-w-md mx-auto shadow-xl border-0">
@@ -44,7 +107,7 @@ export const LoginForm = () => {
             <span className="text-white font-black text-2xl">U</span>
           </div>
           <div>
-            <h3 className="text-2xl font-extrabold text-slate-900">Voto Digital UNT</h3>
+            <h3 className="text-2xl font-extrabold text-slate-900">NextVote UNT</h3>
             <p className="text-sm text-slate-500">Sistema Oficial de Votaciones</p>
           </div>
         </div>
@@ -53,6 +116,7 @@ export const LoginForm = () => {
           Ingresa tus credenciales para acceder al sistema
         </CardDescription>
       </CardHeader>
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -66,11 +130,10 @@ export const LoginForm = () => {
               {...register('identificador')}
             />
             {errors.identificador && (
-              <p className="text-red-600 text-sm font-medium">
-                {errors.identificador.message}
-              </p>
+              <p className="text-red-600 text-sm font-medium">{errors.identificador.message}</p>
             )}
           </div>
+
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-semibold text-slate-700">
               Contraseña
@@ -82,12 +145,63 @@ export const LoginForm = () => {
               {...register('password')}
             />
             {errors.password && (
-              <p className="text-red-600 text-sm font-medium">
-                {errors.password.message}
-              </p>
+              <p className="text-red-600 text-sm font-medium">{errors.password.message}</p>
             )}
           </div>
+
+          {/* ── PANEL DE DEBUG (solo visible cuando hay error) ── */}
+          {debugInfo && (
+            <div className="rounded-lg border-2 border-red-400 bg-red-50 p-3 text-xs font-mono space-y-2 text-left overflow-auto max-h-80">
+              <p className="text-red-700 font-bold text-sm">🛑 Error de Login</p>
+
+              <div>
+                <span className="text-slate-500">URL: </span>
+                <span className="text-red-800 break-all">
+                  {debugInfo.requestUrl ?? `${apiBase}/auth/login`}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-slate-500">HTTP Status: </span>
+                <span className="text-red-800 font-bold">
+                  {debugInfo.isNetworkError
+                    ? '⚡ NETWORK ERROR – el servidor no respondió'
+                    : `${debugInfo.status} ${debugInfo.statusText}`}
+                </span>
+              </div>
+
+              {debugInfo.requestPayload && (
+                <div>
+                  <div className="text-slate-500 mb-1">Payload enviado:</div>
+                  <pre className="text-red-800 bg-red-100 rounded p-1 whitespace-pre-wrap">
+                    {JSON.stringify({ ...debugInfo.requestPayload, password: '***' }, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {debugInfo.responseData && (
+                <div>
+                  <div className="text-slate-500 mb-1">Respuesta del servidor:</div>
+                  <pre className="text-red-800 bg-red-100 rounded p-1 whitespace-pre-wrap">
+                    {typeof debugInfo.responseData === 'object'
+                      ? JSON.stringify(debugInfo.responseData, null, 2)
+                      : String(debugInfo.responseData)}
+                  </pre>
+                </div>
+              )}
+
+              <div>
+                <span className="text-slate-500">Mensaje: </span>
+                <span className="text-red-800">{debugInfo.message}</span>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-slate-400 text-center">
+            API: <code className="bg-slate-100 px-1 rounded">{apiBase}</code>
+          </p>
         </CardContent>
+
         <CardFooter className="pt-2">
           <Button
             type="submit"

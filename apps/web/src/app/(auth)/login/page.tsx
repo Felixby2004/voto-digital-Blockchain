@@ -17,7 +17,7 @@ export default function LoginPage() {
                   <span className="text-blue-900 font-black text-3xl">U</span>
                 </div>
                 <div>
-                  <h2 className="text-3xl font-extrabold leading-tight">Voto Digital</h2>
+                  <h2 className="text-3xl font-extrabold leading-tight">NextVote</h2>
                   <h3 className="text-xl font-semibold text-blue-200">Universidad Nacional de Trujillo</h3>
                 </div>
               </div>

@@ -1,0 +1,313 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-voto
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: universidad_voto
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d universidad_voto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - voto-network
+
+  # Inicializador para aplicar migraciones y sembrar datos de prueba
+  db-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: auth-service
+    container_name: db-deploy
+    command: ["sh", "-c", "cd packages/database && npx prisma db push --accept-data-loss && npx prisma db seed"]
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - voto-network
+
+  # Utilidad para visualizar la BD
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: auth-service # Solo para tener acceso a Prisma, cualquier backend sirve
+    container_name: prisma-studio
+    command: ["sh", "-c", "cd packages/database && npx prisma studio --port 5555 --hostname 0.0.0.0"]
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    networks:
+      - voto-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: auth-service
+    container_name: auth-service
+    ports:
+      - "${AUTH_PORT:-3001}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - AUTH_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/auth/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  electoral-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: electoral-service
+    container_name: electoral-service
+    ports:
+      - "${ELECTORAL_PORT:-3003}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - ELECTORAL_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/elecciones/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  candidate-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: candidate-service
+    container_name: candidate-service
+    ports:
+      - "${CANDIDATE_PORT:-3004}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - CANDIDATE_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/candidatos/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  padron-simple:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: padron-simple
+    container_name: padron-simple
+    ports:
+      - "${PADRON_PORT:-3005}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - PADRON_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/padron/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  dashboard-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: dashboard-service
+    container_name: dashboard-service
+    ports:
+      - "${DASHBOARD_PORT:-3007}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - DASHBOARD_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: audit-service
+    container_name: audit-service
+    ports:
+      - "${AUDIT_PORT:-3008}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - AUDIT_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  blockchain-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: blockchain-service
+    container_name: blockchain-service
+    ports:
+      - "3009:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - BLOCKCHAIN_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  relayer-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: relayer-service
+    container_name: relayer-service
+    ports:
+      - "3010:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - RELAYER_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  crypto-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: crypto-service
+    container_name: crypto-service
+    ports:
+      - "3011:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - CRYPTO_PORT=3000
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        APP_NAME: api-gateway
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/universidad_voto?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - DOCKER_ENV=true
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_healthy
+      electoral-service:
+        condition: service_healthy
+      candidate-service:
+        condition: service_healthy
+      padron-simple:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - voto-network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        APP_NAME: web
+    container_name: web-frontend
+    ports:
+      - "3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:${GATEWAY_PORT:-3000}/api
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - voto-network
+
+volumes:
+  pgdata:
+
+networks:
+  voto-network:
+    driver: bridge

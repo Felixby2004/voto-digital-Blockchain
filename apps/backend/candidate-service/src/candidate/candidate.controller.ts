@@ -24,8 +24,11 @@ export class CandidateController {
   }
 
   @Get()
-  findAll(@Query('eleccionId') eleccionId?: string) {
-    return this.candidateService.findAll(eleccionId);
+  async findAll(@Query('eleccionId') eleccionId?: string) {
+    console.log('[CandidateController] findAll() invocado — eleccionId:', eleccionId);
+    const result = await this.candidateService.findAll(eleccionId);
+    console.log('[CandidateController] findAll() devolvió', Array.isArray(result) ? result.length : 'no-array', 'elementos');
+    return result;
   }
 
   @Get(':id')

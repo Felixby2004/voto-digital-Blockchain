@@ -160,4 +160,12 @@ export class ElectoralService {
     this.logger.log(`Elección archivada: ${id}`);
     return updated;
   }
+
+  // Eliminar elección
+  async delete(id: string) {
+    await this.findOne(id);
+    await this.prisma.eleccion.delete({ where: { id } });
+    this.logger.log(`Elección eliminada: ${id}`);
+    return { deleted: true };
+  }
 }

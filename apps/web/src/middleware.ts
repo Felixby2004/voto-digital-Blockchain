@@ -2,19 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth-storage');
-  const path = request.nextUrl.pathname;
-
-  const isPublicPath = path === '/login' || path === '/register';
-
-  if (!token && !isPublicPath) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  if (token && isPublicPath) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
+  // La autenticación se maneja completamente en el cliente (sessionStorage/Zustand).
+  // El middleware del servidor no tiene acceso a sessionStorage, por lo que no puede
+  // validar sesiones aquí. La protección de rutas está implementada via AuthGuard
+  // en los layouts de (admin) y (dashboard).
   return NextResponse.next();
 }
 

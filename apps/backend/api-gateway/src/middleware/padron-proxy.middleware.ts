@@ -12,8 +12,10 @@ export class PadronProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('PADRON_PORT', 3005);
-    this.padronServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'padron-simple' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('PADRON_PORT', 3005);
+    this.padronServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

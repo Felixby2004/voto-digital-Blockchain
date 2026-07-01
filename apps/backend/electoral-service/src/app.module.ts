@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ElectoralModule } from './electoral/electoral.module';
+import { VotoModule } from './voto/voto.module';
 import { JwtAuthGuard, RolesGuard } from 'common';
 
 @Module({
@@ -12,6 +13,7 @@ import { JwtAuthGuard, RolesGuard } from 'common';
       cache: true,
     }),
     ElectoralModule,
+    VotoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

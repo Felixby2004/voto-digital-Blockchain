@@ -12,8 +12,10 @@ export class BlockchainProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('BLOCKCHAIN_PORT', 3010);
-    this.blockchainServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'blockchain-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('BLOCKCHAIN_PORT', 3010);
+    this.blockchainServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

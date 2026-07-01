@@ -12,8 +12,10 @@ export class CryptoProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('CRYPTO_PORT', 3011);
-    this.cryptoServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'crypto-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('CRYPTO_PORT', 3011);
+    this.cryptoServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

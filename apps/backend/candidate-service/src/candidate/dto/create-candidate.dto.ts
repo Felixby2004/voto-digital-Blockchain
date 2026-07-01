@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateCandidateDto {
   @IsString()
@@ -8,7 +8,7 @@ export class CreateCandidateDto {
   apellido: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsString()
   foto?: string;
 
   @IsOptional()
@@ -17,6 +17,10 @@ export class CreateCandidateDto {
 
   @IsString()
   cargo: string;
+
+  @IsOptional()
+  @IsString()
+  partido?: string;
 
   @IsOptional()
   @IsString()

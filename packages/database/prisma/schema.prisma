@@ -222,6 +222,7 @@ model Candidato {
   foto              String?
   descripcion       String?
   cargo             String
+  partido           String?
   facultad          String?
   escuela           String?
   estado            EstadoCandidato @default(ACTIVO)
@@ -243,6 +244,7 @@ model PadronElectoral {
   profesorId        String?        // Nuevo campo
   eleccionId        String
   estadoHabilitado  Boolean        @default(true)
+  haVotado          Boolean        @default(false)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 

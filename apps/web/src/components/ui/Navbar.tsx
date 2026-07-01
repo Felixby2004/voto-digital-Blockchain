@@ -17,7 +17,7 @@ export const Navbar = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-extrabold text-white tracking-tight leading-tight">
-                Voto Digital
+                NextVote
               </span>
               <span className="text-sm text-blue-200 font-semibold">
                 Universidad Nacional de Trujillo

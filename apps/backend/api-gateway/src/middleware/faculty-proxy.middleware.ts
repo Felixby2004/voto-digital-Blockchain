@@ -12,8 +12,10 @@ export class FacultyProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('FACULTY_PORT', 3014);
-    this.facultyServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'faculty-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('FACULTY_PORT', 3014);
+    this.facultyServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

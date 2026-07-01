@@ -5,17 +5,29 @@ import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class JwtAuthMiddleware implements NestMiddleware {
-  private readonly publicPaths = ['/api/auth/login', '/api/auth/refresh'];
+  private readonly publicPaths = [
+    '/api/auth/login',
+    '/api/auth/refresh',
+    '/auth/login',
+    '/auth/refresh',
+  ];
 
   constructor(private config: ConfigService) {}
 
-  private isPublic(path: string): boolean {
-    if (path.endsWith('/health')) return true;
-    return this.publicPaths.includes(path);
+  private isPublic(path: string, originalUrl: string): boolean {
+    const p = path.toLowerCase();
+    const o = originalUrl.toLowerCase();
+    if (p.endsWith('/health') || o.endsWith('/health')) return true;
+    return (
+      p.includes('/auth/login') ||
+      p.includes('/auth/refresh') ||
+      o.includes('/auth/login') ||
+      o.includes('/auth/refresh')
+    );
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
-    if (this.isPublic(req.path)) {
+    if (this.isPublic(req.path, req.originalUrl)) {
       return next();
     }
 

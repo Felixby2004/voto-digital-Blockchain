@@ -1,0 +1,85 @@
+FROM node:22-alpine AS builder
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
+RUN apk update && apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+RUN corepack enable pnpm
+
+ARG APP_NAME
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+COPY packages/ ./packages/
+COPY apps/${APP_NAME}/ ./apps/${APP_NAME}/
+RUN mkdir -p apps/${APP_NAME}/public && touch apps/${APP_NAME}/public/.keep
+RUN ls -la apps/${APP_NAME}
+
+# Next.js telemetry disable
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --filter ${APP_NAME}... --frozen-lockfile
+
+# Generate Prisma Client if this app uses Prisma
+RUN if grep -q "@prisma/client" apps/${APP_NAME}/package.json; then \
+      mkdir -p apps/${APP_NAME}/prisma && \
+      cp packages/database/prisma/schema.prisma apps/${APP_NAME}/prisma/schema.prisma && \
+      cd apps/${APP_NAME} && \
+      if [ -f ./node_modules/.bin/prisma ]; then \
+        ./node_modules/.bin/prisma generate; \
+      elif [ -f ../../packages/database/node_modules/.bin/prisma ]; then \
+        ../../packages/database/node_modules/.bin/prisma generate; \
+      else \
+        npx --no-install prisma generate; \
+      fi; \
+    else \
+      echo "Prisma not used by ${APP_NAME}, skipping generation."; \
+    fi
+
+# Compile the database package if used by this app
+RUN if [ -d packages/database/node_modules ]; then pnpm --filter database build; else echo "Database package not used, skipping build."; fi
+
+# Compile the shared common library if used by this service
+RUN if [ -d packages/common/node_modules ]; then pnpm --filter common build; else echo "Common library not used by ${APP_NAME}, skipping build."; fi
+
+RUN pnpm --filter ${APP_NAME} build
+RUN ls -la apps/${APP_NAME}/ && ls -la apps/${APP_NAME}/public/
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN apk update && apk add --no-cache openssl
+
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next/static ./apps/${APP_NAME}/.next/static
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
+
+# Si el standalone no está configurado, copiamos de forma estándar
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/packages ./packages
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/package.json ./apps/${APP_NAME}/
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/node_modules ./apps/${APP_NAME}/node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next ./apps/${APP_NAME}/.next
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+
+# Run standard next start
+CMD ["sh", "-c", "cd apps/${APP_NAME} && npm run start"]

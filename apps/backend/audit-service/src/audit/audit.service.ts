@@ -76,7 +76,7 @@ export class AuditService {
 
     return {
       totalEventos: total,
-      eventosPorTipo: byType.map(item => ({
+      eventosPorTipo: byType.map((item: any) => ({
         tipo: item.tipoEvento,
         cantidad: item._count.id,
       })),

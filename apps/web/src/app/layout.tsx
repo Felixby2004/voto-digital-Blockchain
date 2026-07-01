@@ -4,7 +4,7 @@ import { Providers } from './providers';
 import { Navbar } from '@/components/ui/Navbar';
 
 export const metadata: Metadata = {
-  title: 'Voto Digital',
+  title: 'NextVote',
   description: 'Sistema de votación digital universitario',
 };
 

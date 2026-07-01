@@ -12,8 +12,10 @@ export class AdminProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('ADMIN_PORT', 3013);
-    this.adminServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'admin-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('ADMIN_PORT', 3013);
+    this.adminServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

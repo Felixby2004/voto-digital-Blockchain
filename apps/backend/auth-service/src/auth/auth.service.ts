@@ -47,6 +47,23 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    // ── BLOQUEO SI YA VOTÓ ──
+    if (usuario.rol === 'ESTUDIANTE' || usuario.rol === 'PROFESOR') {
+      const padronVotado = await prisma.padronElectoral.findFirst({
+        where: {
+          haVotado: true,
+          ...(usuario.estudiante?.id && { estudianteId: usuario.estudiante.id }),
+          ...(usuario.profesor?.id && { profesorId: usuario.profesor.id }),
+        },
+        include: { eleccion: true },
+      });
+
+      if (padronVotado) {
+        this.logger.warn(`Usuario rol=${usuario.rol} YA VOTÓ en "${padronVotado.eleccion.nombre}"`);
+        throw new UnauthorizedException('Ya emitiste tu voto. No puedes volver a ingresar.');
+      }
+    }
+
     let role = usuario.rol;
     let additionalInfo: Record<string, any> = {};
 
@@ -108,9 +125,25 @@ export class AuthService {
       expiresIn: this.config.get('JWT_REFRESH_EXPIRATION', '7d'),
     });
 
+    // Buscar elección activa en la que el usuario esté inscrito (solo votantes)
+    let eleccionActivaId: string | null = null;
+    if (user.rol === 'ESTUDIANTE' || user.rol === 'PROFESOR') {
+      const padron = await prisma.padronElectoral.findFirst({
+        where: {
+          haVotado: false,
+          eleccion: { estado: 'ACTIVA' },
+          ...(user.estudianteId && { estudianteId: user.estudianteId }),
+          ...(user.profesorId && { profesorId: user.profesorId }),
+        },
+        select: { eleccionId: true },
+      });
+      eleccionActivaId = padron?.eleccionId ?? null;
+    }
+
     return {
       accessToken,
       refreshToken,
+      eleccionActivaId,
       user: {
         id: user.id,
         nombre: user.nombre,
@@ -150,7 +183,7 @@ export class AuthService {
         expiresIn: this.config.get('JWT_EXPIRATION', '15m'),
       });
 
-      return { accessToken: newAccessToken };
+      return { accessToken: newAccessToken, refreshToken };
     } catch (error) {
       this.logger.warn('Refresh token inválido o expirado');
       throw new UnauthorizedException('Refresh token inválido o expirado');

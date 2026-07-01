@@ -12,8 +12,10 @@ export class AuditProxyMiddleware implements NestMiddleware {
     private httpService: HttpService,
     private config: ConfigService,
   ) {
-    const port = this.config.get('AUDIT_PORT', 3008);
-    this.auditServiceUrl = `http://localhost:${port}`;
+    const isDocker = this.config.get('DOCKER_ENV') === 'true';
+    const host = isDocker ? 'audit-service' : 'localhost';
+    const port = isDocker ? 3000 : this.config.get('AUDIT_PORT', 3008);
+    this.auditServiceUrl = `http://${host}:${port}`;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
